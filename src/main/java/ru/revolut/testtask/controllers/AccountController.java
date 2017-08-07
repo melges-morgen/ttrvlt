@@ -57,8 +57,7 @@ public class AccountController {
 
         return queryFactory.selectFrom(transaction)
                 .where(account.id.eq(accountId)
-                        .and(transaction.destination.eq(account))
-                        .or(transaction.source.eq(account))
+                        .and(transaction.destination.eq(account).or(transaction.source.eq(account)))
                 ).fetch();
     }
 
