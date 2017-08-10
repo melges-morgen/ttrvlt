@@ -5,14 +5,9 @@ import ru.revolut.testtask.controllers.BasicOperationsController;
 import ru.revolut.testtask.dbmodel.Account;
 import ru.revolut.testtask.dbmodel.Transaction;
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.*;
+import java.util.Collections;
+
 import java.util.List;
 
 /**
@@ -40,8 +35,13 @@ public class AccountsResource {
     }
 
     @GET
+<<<<<<< HEAD
     @Path("/transactions")
     public List<Transaction> transactions(@PathParam("id") Long accountId) {
         return accountController.getTransactionsOfAccount(accountId);
+=======
+    public List<Transaction> transactions() {
+        return Collections.emptyList();
+>>>>>>> 6c95ed5be522d77254dae958f7d5e172d36b17d0
     }
 }
