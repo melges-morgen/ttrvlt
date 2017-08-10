@@ -21,6 +21,11 @@ public class EmbeddedServer {
     private EmbeddedServer() {}
 
     public static void main(String[] args) throws Exception {
+        QuasiBeanManager.init("revolut-test-task");
+        runWebServer();
+    }
+
+    private static void runWebServer() throws Exception {
         logger.info("Starting internal jetty server");
 
         ResourceConfig config = new JerseyConfig();

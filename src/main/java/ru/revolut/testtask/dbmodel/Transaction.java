@@ -1,5 +1,8 @@
 package ru.revolut.testtask.dbmodel;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 
@@ -13,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * TODO: Write class description
@@ -30,11 +34,15 @@ public class Transaction {
     @ManyToOne
     @JoinColumn(name = "source_id")
     @PrimaryKeyJoinColumn
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     private Account source;
 
     @ManyToOne
     @JoinColumn(name = "destination_id")
     @PrimaryKeyJoinColumn
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     private Account destination;
 
     @Column(name = "time")
@@ -47,6 +55,13 @@ public class Transaction {
 
     @Column(name = "description")
     private String description;
+
+    public Transaction(Account source, Account destination, double amount, String description) {
+        this.source = source;
+        this.destination = destination;
+        this.amount = amount;
+        this.description = description;
+    }
 
     public Long getId() {
         return id;
@@ -94,5 +109,25 @@ public class Transaction {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Transaction that = (Transaction) o;
+        return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getSource(), that.getSource()) &&
+                Objects.equals(getDestination(), that.getDestination()) &&
+                Objects.equals(getTime(), that.getTime()) &&
+                Objects.equals(getAmount(), that.getAmount()) &&
+                Objects.equals(getDescription(), that.getDescription());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getSource(), getDestination(), getTime(), getAmount(), getDescription());
     }
 }

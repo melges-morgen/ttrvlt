@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * TODO: Write class description
@@ -54,5 +55,22 @@ public class Account {
 
     public void setOpenDate(Date openDate) {
         this.openDate = openDate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Account account = (Account) o;
+        return Objects.equals(getId(), account.getId()) &&
+                Objects.equals(getDebit(), account.getDebit()) &&
+                Objects.equals(getOpenDate(), account.getOpenDate());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getDebit(), getOpenDate());
     }
 }
