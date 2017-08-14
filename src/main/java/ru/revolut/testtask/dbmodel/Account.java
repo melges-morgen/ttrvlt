@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Objects;
 
@@ -26,7 +27,7 @@ public class Account {
     private Long id;
 
     @Column(name = "debit", nullable = false)
-    private Double debit;
+    private BigDecimal debit;
 
     @Column(name = "open_date")
     @Type(type="timestamp")
@@ -41,11 +42,11 @@ public class Account {
         this.id = id;
     }
 
-    public Double getDebit() {
+    public BigDecimal getDebit() {
         return debit;
     }
 
-    public void setDebit(Double debit) {
+    public void setDebit(BigDecimal debit) {
         this.debit = debit;
     }
 
@@ -65,7 +66,7 @@ public class Account {
             return false;
         Account account = (Account) o;
         return Objects.equals(getId(), account.getId()) &&
-                Objects.equals(getDebit(), account.getDebit()) &&
+                getDebit().compareTo(account.getDebit()) == 0 &&
                 Objects.equals(getOpenDate(), account.getOpenDate());
     }
 

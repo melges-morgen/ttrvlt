@@ -15,8 +15,10 @@ import ru.revolut.testtask.api.JerseyConfig;
  * @author morgmat
  */
 public class EmbeddedServer {
+    public static final int SERVER_PORT = 8090;
+
     private static Logger logger = LoggerFactory.getLogger(EmbeddedServer.class);
-    private static final int SERVER_PORT = 8090;
+    private static Server server;
 
     private EmbeddedServer() {}
 
@@ -25,21 +27,28 @@ public class EmbeddedServer {
         runWebServer();
     }
 
-    private static void runWebServer() throws Exception {
+    public static void runWebServer() throws Exception {
         logger.info("Starting internal jetty server");
 
-        ResourceConfig config = new JerseyConfig();
-        ServletHolder servlet = new ServletHolder(new ServletContainer(config));
-
-        Server server = new Server(SERVER_PORT);
-        ServletContextHandler context = new ServletContextHandler(server, "/api/");
-        context.addServlet(servlet, "/*");
-
         try {
-            server.start();
+            startServer();
             server.join();
         } finally {
             server.destroy();
         }
+    }
+
+    public static void startServer() throws Exception {
+        ResourceConfig config = new JerseyConfig();
+        ServletHolder servlet = new ServletHolder(new ServletContainer(config));
+
+        server = new Server(SERVER_PORT);
+        ServletContextHandler context = new ServletContextHandler(server, "/api/");
+        context.addServlet(servlet, "/*");
+        server.start();
+    }
+
+    public static void stopServer() throws Exception {
+        server.stop();
     }
 }

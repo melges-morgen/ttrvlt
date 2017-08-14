@@ -27,7 +27,7 @@ public class DatabaseController {
         entityManagerFactory = Persistence.createEntityManagerFactory(persistenceUnitName);
     }
 
-    public void doInTransaction(EntityManager entityManager, Runnable function) {
+    public static void doInTransaction(EntityManager entityManager, Runnable function) {
         try {
             entityManager.getTransaction().begin();
             function.run();

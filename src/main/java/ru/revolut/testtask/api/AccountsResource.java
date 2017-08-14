@@ -5,9 +5,17 @@ import ru.revolut.testtask.controllers.BasicOperationsController;
 import ru.revolut.testtask.dbmodel.Account;
 import ru.revolut.testtask.dbmodel.Transaction;
 
-import javax.ws.rs.*;
-import java.util.Collections;
-
+import javax.validation.constraints.Min;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -15,7 +23,7 @@ import java.util.List;
  *
  * @author morgmat
  */
-@Path("/accounts/{id}")
+@Path("/accounts")
 @Produces(MediaType.APPLICATION_JSON)
 public class AccountsResource {
     private BasicOperationsController accountController;
@@ -25,23 +33,24 @@ public class AccountsResource {
     }
 
     @GET
-    public Account byId(@PathParam("id") Long accountId) {
-        return accountController.getAccountById(accountId);
+    @Path("/{id}")
+    public Response byId(@PathParam("id") Long accountId) {
+        Account account = accountController.getAccountById(accountId);
+        if(account != null) {
+            return Response.ok(account).build();
+        }
+
+        return Response.status(404).build();
     }
 
     @POST
-    public Account create(@FormParam("placement") @DefaultValue("0.0") Double placement) {
+    public Account create(@FormParam("placement") @DefaultValue("0.0") @Min(0) BigDecimal placement) {
         return accountController.createNewAccount(placement);
     }
 
     @GET
-<<<<<<< HEAD
-    @Path("/transactions")
+    @Path("/{id}/transactions")
     public List<Transaction> transactions(@PathParam("id") Long accountId) {
         return accountController.getTransactionsOfAccount(accountId);
-=======
-    public List<Transaction> transactions() {
-        return Collections.emptyList();
->>>>>>> 6c95ed5be522d77254dae958f7d5e172d36b17d0
     }
 }

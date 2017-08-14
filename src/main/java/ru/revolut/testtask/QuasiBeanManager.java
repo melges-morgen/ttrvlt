@@ -17,7 +17,8 @@ public class QuasiBeanManager {
     public static void init(String persistenceUnit) {
         QuasiBeanManager.databaseController = new DatabaseController(persistenceUnit);
         QuasiBeanManager.basicOperationsController = new BasicOperationsController(databaseController);
-        QuasiBeanManager.operationsController = new TransferOperationsController(databaseController);
+        QuasiBeanManager.operationsController = new TransferOperationsController(
+                databaseController, basicOperationsController);
     }
 
     protected static void setDatabaseController(DatabaseController databaseController) {

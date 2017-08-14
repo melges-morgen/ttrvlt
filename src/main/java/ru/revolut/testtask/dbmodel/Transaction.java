@@ -15,6 +15,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Objects;
 
@@ -51,12 +52,15 @@ public class Transaction {
     private Date time;
 
     @Column(name = "amount", nullable = false, updatable = false)
-    private Double amount;
+    private BigDecimal amount;
 
     @Column(name = "description")
     private String description;
 
-    public Transaction(Account source, Account destination, double amount, String description) {
+    public Transaction() {
+    }
+
+    public Transaction(Account source, Account destination, BigDecimal amount, String description) {
         this.source = source;
         this.destination = destination;
         this.amount = amount;
@@ -95,11 +99,11 @@ public class Transaction {
         this.time = time;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -122,7 +126,7 @@ public class Transaction {
                 Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getDestination(), that.getDestination()) &&
                 Objects.equals(getTime(), that.getTime()) &&
-                Objects.equals(getAmount(), that.getAmount()) &&
+                getAmount().compareTo(that.getAmount()) == 0 &&
                 Objects.equals(getDescription(), that.getDescription());
     }
 

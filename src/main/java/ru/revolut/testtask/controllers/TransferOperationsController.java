@@ -1,9 +1,12 @@
 package ru.revolut.testtask.controllers;
 
+import ru.revolut.testtask.controllers.exceptions.EntityNotExistException;
+import ru.revolut.testtask.controllers.exceptions.InvalidAccountForOperationException;
 import ru.revolut.testtask.dbmodel.Account;
 import ru.revolut.testtask.dbmodel.Transaction;
 
 import javax.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,14 +23,17 @@ public class TransferOperationsController {
     private final Object syncObjectModificationMonitor = new Object();
 
     private final DatabaseController databaseController;
+    private final BasicOperationsController basicOperationsController;
 
-    public TransferOperationsController(DatabaseController databaseController) {
+    public TransferOperationsController(DatabaseController databaseController,
+                                        BasicOperationsController basicOperationsController) {
         this.databaseController = databaseController;
+        this.basicOperationsController = basicOperationsController;
     }
 
-    public Transaction transferMoney(Long sourceId, Long destinationId, double amount, String description) {
+    public Transaction transferMoney(Long sourceId, Long destinationId, BigDecimal amount, String description) {
         if (Objects.equals(sourceId, destinationId)) {
-            throw new IllegalArgumentException("Source and destination account are the same");
+            throw new InvalidAccountForOperationException("Source and destination account are the same");
         }
 
         if (sourceId == null) {
@@ -39,10 +45,19 @@ public class TransferOperationsController {
         }
 
     }
-     private Transaction remittance(Long sourceId, Long destinationId, double amount, String description) {
+
+    private Transaction remittance(Long sourceId, Long destinationId, BigDecimal amount, String description) {
+        if (!basicOperationsController.isAccountExist(destinationId)) {
+            throw new EntityNotExistException(destinationId);
+        }
+
+        if(!basicOperationsController.isAccountExist(sourceId)) {
+            throw new EntityNotExistException(sourceId);
+        }
+
         final Lock firstLock;
         final Lock secondLock;
-        if(sourceId > destinationId)  { // Prevent deadlock, add order
+        if (sourceId > destinationId) { // Prevent deadlock, add order
             firstLock = getLockForAccount(sourceId);
             secondLock = getLockForAccount(destinationId);
         } else {
@@ -55,14 +70,14 @@ public class TransferOperationsController {
         secondLock.lock();
         try {
             Account source = entityManager.find(Account.class, sourceId);
-            if(source.getDebit() < amount) {
-                throw new IllegalStateException("Not enough money on account with id " + sourceId);
+            if (source.getDebit().compareTo(amount) < 0) {
+                throw new InvalidAccountForOperationException("Not enough money on account with id " + sourceId);
             }
 
             Account destination = entityManager.find(Account.class, destinationId);
 
-            source.setDebit(source.getDebit() - amount);
-            destination.setDebit(destination.getDebit() + amount);
+            source.setDebit(source.getDebit().subtract(amount));
+            destination.setDebit(destination.getDebit().add(amount));
 
             Transaction transaction = new Transaction(source, destination, amount, description);
 
@@ -73,13 +88,17 @@ public class TransferOperationsController {
             });
             return transaction;
         } finally {
+            entityManager.close();
             firstLock.unlock();
             secondLock.unlock();
-            entityManager.close();
         }
     }
 
-    private Transaction depositing(Long destinationId, double amount) {
+    private Transaction depositing(Long destinationId, BigDecimal amount) {
+        if (!basicOperationsController.isAccountExist(destinationId)) {
+            throw new EntityNotExistException(destinationId);
+        }
+
         Lock lock = getLockForAccount(destinationId);
 
         EntityManager entityManager = databaseController.createEntityManager();
@@ -87,7 +106,7 @@ public class TransferOperationsController {
         try {
             Account destination = entityManager.find(Account.class, destinationId);
 
-            destination.setDebit(destination.getDebit() - amount);
+            destination.setDebit(destination.getDebit().add(amount));
             Transaction transaction = new Transaction(null, destination, amount, "Depositing money");
             DatabaseController.doInTransaction(entityManager, () -> {
                 entityManager.persist(destination);
@@ -95,23 +114,27 @@ public class TransferOperationsController {
             });
             return transaction;
         } finally {
-            lock.unlock();
             entityManager.close();
+            lock.unlock();
         }
     }
 
-    private Transaction withdraw(Long sourceId, double amount) {
+    private Transaction withdraw(Long sourceId, BigDecimal amount) {
+        if (!basicOperationsController.isAccountExist(sourceId)) {
+            throw new EntityNotExistException(sourceId);
+        }
+
         Lock lock = getLockForAccount(sourceId);
 
         EntityManager entityManager = databaseController.createEntityManager();
         lock.lock();
         try {
             Account source = entityManager.find(Account.class, sourceId);
-            if(source.getDebit() < amount) {
-                throw new IllegalStateException("Not enough money on account with id " + sourceId);
+            if (source.getDebit().compareTo(amount) < 0) {
+                throw new InvalidAccountForOperationException("Not enough money on account with id " + sourceId);
             }
 
-            source.setDebit(source.getDebit() - amount);
+            source.setDebit(source.getDebit().subtract(amount));
             Transaction transaction = new Transaction(source, null, amount, "Withdraw money");
             DatabaseController.doInTransaction(entityManager, () -> {
                 entityManager.persist(source);
@@ -126,17 +149,12 @@ public class TransferOperationsController {
 
     private Lock getLockForAccount(Long accountId) {
         Lock syncObject = accountOperationMonitorsMap.get(accountId);
-        if(syncObject == null) {
+        if (syncObject == null) {
             synchronized (syncObjectModificationMonitor) {
-                syncObject = accountOperationMonitorsMap.get(accountId); // Check that no other thread have created it
-                if(syncObject != null) {
-                    syncObject = new ReentrantLock();
-                    accountOperationMonitorsMap.put(accountId, syncObject);
-                }
+                syncObject = accountOperationMonitorsMap.computeIfAbsent(accountId, k -> new ReentrantLock());
             }
         }
 
         return syncObject;
     }
-
 }
