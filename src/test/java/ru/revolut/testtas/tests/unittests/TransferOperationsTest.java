@@ -68,7 +68,7 @@ public class TransferOperationsTest {
         assertEquals(accountOne, transaction.getSource());
         assertEquals(accountTwo, transaction.getDestination());
         assertEquals("simpleTransferTest", transaction.getDescription());
-        assertTrue(transaction.getTime().after(testStartupTime));
+        assertTrue(transaction.getTime().compareTo(testStartupTime) >= 0);
         assertThat(
                 transaction.getAmount(),
                 Matchers.comparesEqualTo(BigDecimal.valueOf(55.5))

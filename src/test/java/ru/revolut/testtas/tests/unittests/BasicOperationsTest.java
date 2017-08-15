@@ -43,7 +43,7 @@ public class BasicOperationsTest {
         Account createdAccount = basicOperationsController.createNewAccount(BigDecimal.valueOf(0.0));
         assertThat(createdAccount.getDebit(), Matchers.comparesEqualTo(BigDecimal.valueOf(0.0)));
         assertEquals((long) 1, (long) createdAccount.getId());
-        assertTrue(createdAccount.getOpenDate().after(testStartupTime));
+        assertTrue(createdAccount.getOpenDate().compareTo(testStartupTime) >= 0);
 
         Account accountInDb = basicOperationsController.getAccountById(createdAccount.getId());
         assertEquals(createdAccount, accountInDb);
@@ -58,7 +58,7 @@ public class BasicOperationsTest {
         Account createdAccount = basicOperationsController.createNewAccount(BigDecimal.valueOf(25.5));
         assertThat(createdAccount.getDebit(), Matchers.comparesEqualTo(BigDecimal.valueOf(25.5)));
         assertEquals(1L, (long) createdAccount.getId());
-        assertTrue(createdAccount.getOpenDate().after(testStartupTime));
+        assertTrue(createdAccount.getOpenDate().compareTo(testStartupTime) >= 0);
 
         Account accountInDb = basicOperationsController.getAccountById(createdAccount.getId());
         assertThat(accountInDb.getDebit(), Matchers.comparesEqualTo(createdAccount.getDebit()));
@@ -74,7 +74,7 @@ public class BasicOperationsTest {
         assertEquals(null, transaction.getSource());
         assertEquals("Initial money placement", transaction.getDescription());
         assertTrue(transaction.getTime().before(new Date()));
-        assertTrue(transaction.getTime().after(testStartupTime));
+        assertTrue(transaction.getTime().compareTo(testStartupTime) >= 0);
 
         Transaction transactionById = basicOperationsController.getTransactionById(1L);
         assertEquals(transaction, transactionById);
